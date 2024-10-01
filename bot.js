@@ -108,10 +108,7 @@ chatBotClient.on(Events.InteractionCreate, async (interaction) => {
 
     timeSelectionsMap.set(interaction.user.id, timeSelection);
 
-    await interaction.reply({
-      content: `You selected ${label}: ${selectedTime}.`,
-      ephemeral: true
-    });
+    await interaction.deferUpdate();
   }
 
   if (interaction.isButton() && interaction.customId === 'btn_timeslot') {
