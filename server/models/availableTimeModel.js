@@ -24,7 +24,7 @@ export const insertTimeSlot = async (teacherId, date, startTime, endTime) => {
             date,
             formatTime(currentHour),
             formatTime(nextHour),
-            false,
+            false
           ]
         );
 
@@ -36,6 +36,19 @@ export const insertTimeSlot = async (teacherId, date, startTime, endTime) => {
   } catch (error) {
     console.error('Error during "insertTimeSlot()":', error);
   }
+};
+
+export const getTimeSlot = async (teacherId) => {
+  const availableTimeSlots = await db.any(
+    `
+    SELECT start_time, end_time 
+    FROM "dc-bot".available_time 
+    WHERE teacher_id = $1
+    ORDER BY start_time ASC
+    `,
+    [teacherId]
+  );
+  return availableTimeSlots;
 };
 
 // Helper function to parse time into a Date object
@@ -52,16 +65,3 @@ function formatTime(date) {
   const minutes = date.getMinutes().toString().padStart(2, "0");
   return `${hours}:${minutes}`;
 }
-
-export const getTimeSlot = async (teacherId) => {
-  const availableTimeSlots = await db.any(
-    `
-    SELECT start_time, end_time 
-    FROM "dc-bot".available_time 
-    WHERE teacher_id = $1
-    ORDER BY start_time ASC
-    `,
-    [teacherId]
-  );
-  return availableTimeSlots;
-};
