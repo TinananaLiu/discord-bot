@@ -32,24 +32,23 @@ const chatBotClient = new Client({
     GatewayIntentBits.GuildMessageReactions
   ],
   partials: [
-    //fetch non-cached
     Partials.Message,
     Partials.Reaction,
     Partials.Channel
   ]
 });
 
-// In-memory map to cache user available time selection
 /**
  * @type {Object.<string, { date: Date, startTime: number, endTime: number}>}
+ * @description In-memory map to cache user selections temporarily during their session
  * @property {string} key - User's discord id
- * @property {Object} value - An object  
- * @property {Date} value.date - The date 
- * @property {number} value.startTime
- * @property {number} value.endTime 
+ * @property {Date} value.date
+ * @property {number} value.startTime - 24 hour
+ * @property {number} value.endTime  - 24 hour
  */
 const timeSelectionsMap = new Map();
 
+// Maps to dynamically route interactions to respective handlers
 const customIdHandlers = {
   "openModal": argsWrapper(getUserInfoModal, chatBotClient),
   "userInfoModal": submitUserInfoModal,
@@ -64,24 +63,26 @@ const commandNameHandlers = {
   "search-available-time": getSearchForm
 };
 
-chatBotClient.once(Events.ClientReady, () => {
-  console.log("Bot is online!");
-});
 
-chatBotClient.on(Events.GuildMemberAdd, async (member) => {
-  await getWelcomeMessage(member);
-});
-
-chatBotClient.on(Events.InteractionCreate, async (interaction) => {
-  await handleInteraction(interaction);
-})
-
-function argsWrapper(handler, ...args) {
+/**
+ * @function createInteractionHandler
+ * @description Wraps the interaction handler function with additional arguments
+ * @param {Function} func - Handler function
+ * @param {...any} args - Additional arguments to pass to the handler
+ * @returns {Function} - A new function that executes the handler with the specified arguments
+ */
+function argsWrapper(func, ...args) {
   return async (interaction) => {
-    await handler(interaction, ...args);
+    await func(interaction, ...args);
   }
 }
 
+/**
+ * @async
+ * @function handleInteraction
+ * @description Determines the appropriate handler for the interaction and executes it
+ * @param {Interaction} interaction - Discord interaction object triggered by user
+ */
 async function handleInteraction(interaction){
   let handler;
 
@@ -98,6 +99,18 @@ async function handleInteraction(interaction){
   
   await handler(interaction);
 }
+
+chatBotClient.once(Events.ClientReady, () => {
+  console.log("Bot is online!");
+});
+
+chatBotClient.on(Events.GuildMemberAdd, async (member) => {
+  await getWelcomeMessage(member);
+});
+
+chatBotClient.on(Events.InteractionCreate, async (interaction) => {
+  await handleInteraction(interaction);
+})
 
 // Login Discord
 chatBotClient.login(process.env.TOKEN);
