@@ -41,7 +41,7 @@ export const insertTimeSlot = async (teacherId, date, startTime, endTime) => {
 export const getTimeSlot = async (teacherId) => {
   const availableTimeSlots = await db.any(
     `
-    SELECT start_time, end_time 
+    SELECT date, start_time, end_time 
     FROM "dc-bot".available_time 
     WHERE teacher_id = $1
     ORDER BY start_time ASC

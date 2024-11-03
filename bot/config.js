@@ -7,7 +7,8 @@ const config = {
   rulesMessageId: "1297131739012927488",
   rulesChannelId: "1288321069668765707",
   startHereChannelId: "1297136179124240404",
-  studentsRoleId: "1297186072635117639",
+  onboardRoleId: "1297186072635117639",
+  signUpChannelId: "1301435298957361202"
 };
 
 export default config;

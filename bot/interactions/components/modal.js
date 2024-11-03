@@ -5,11 +5,10 @@ import {
   ActionRowBuilder
 } from "discord.js";
 
-
 export const buildUserInfoModal = () => {
   const modal = new ModalBuilder()
-  .setCustomId("userInfoModal")
-  .setTitle("基本資料填寫");
+    .setCustomId("userInfoModal")
+    .setTitle("基本資料填寫");
 
   const nameInput = new TextInputBuilder()
     .setCustomId("name")
@@ -31,6 +30,5 @@ export const buildUserInfoModal = () => {
     new ActionRowBuilder().addComponents(ageInput),
     new ActionRowBuilder().addComponents(interestsInput)
   );
-  return modal
+  return modal;
 };
-

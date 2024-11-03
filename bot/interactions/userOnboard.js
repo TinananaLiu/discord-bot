@@ -1,11 +1,6 @@
-import config from "../config.js"
-import {
-  buildUserInfoModal
-} from "./components/modal.js"
-import {
-  postUserInfo
-} from "../api/api.js"
-
+import config from "../config.js";
+import { buildUserInfoModal } from "./components/modal.js";
+import { postUserInfo } from "../api/api.js";
 
 export const getWelcomeMessage = async (member) => {
   const welcomeChannel = member.guild.channels.cache.find(
@@ -13,19 +8,19 @@ export const getWelcomeMessage = async (member) => {
   );
   if (welcomeChannel) {
     await welcomeChannel.send({
-      content: `👋 歡迎 ${member.displayName} 加入！請閱讀伺服器規則並點擊本訊息的 ✅ 表情來表示同意規則。`,
+      content: `👋 歡迎 ${member.displayName} 加入！請閱讀伺服器規則並點擊該訊息的 ✅ 表情來表示同意規則。`,
       ephemeral: true
     });
   }
-}
+};
 
 export const getUserInfoModal = async (interaction, chatBotClient) => {
-  if (!interaction.isButton || interaction.customId !== "openModal"){
+  if (!interaction.isButton || interaction.customId !== "openModal") {
     return;
   }
-  
+
   const member = interaction.guild.members.cache.get(interaction.user.id);
-    
+
   if (!member) {
     return await interaction.reply({
       content: "發生了預期以外的錯誤，請稍後再重新填寫。",
@@ -35,8 +30,12 @@ export const getUserInfoModal = async (interaction, chatBotClient) => {
 
   try {
     // 從指定頻道中抓取訊息
-    const rulesChannel = chatBotClient.channels.cache.get(config.rulesChannelId);
-    const rulesMessage = await rulesChannel.messages.fetch(config.rulesMessageId);
+    const rulesChannel = chatBotClient.channels.cache.get(
+      config.rulesChannelId
+    );
+    const rulesMessage = await rulesChannel.messages.fetch(
+      config.rulesMessageId
+    );
 
     const hasReacted = rulesMessage.reactions.cache
       .get("✅")
@@ -59,10 +58,13 @@ export const getUserInfoModal = async (interaction, chatBotClient) => {
       ephemeral: true
     });
   }
-}
+};
 
 export const submitUserInfoModal = async (interaction) => {
-  if (!interaction.isModalSubmit() || !interaction.customId === "userInfoModal"){
+  if (
+    !interaction.isModalSubmit() ||
+    !interaction.customId === "userInfoModal"
+  ) {
     return;
   }
 
@@ -83,9 +85,9 @@ export const submitUserInfoModal = async (interaction) => {
 
     const member = interaction.guild.members.cache.get(userId);
     if (member) {
-      await member.roles.add(config.studentsRoleId);
+      await member.roles.add(config.onboardRoleId);
       await interaction.reply({
-        content: `${member.displayName}，你已成功加入社群並獲得 "Students" 身份組！`,
+        content: `${member.displayName}，你已成功加入社群，請在 #sign-up 頻道進行選課！`,
         ephemeral: true
       });
     } else {
@@ -101,4 +103,4 @@ export const submitUserInfoModal = async (interaction) => {
       ephemeral: true
     });
   }
-}
+};
