@@ -1,23 +1,20 @@
-import {
-  Client,
-  GatewayIntentBits,
-  Events,
-  Partials,
-} from "discord.js";
+import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
+import { ButtonBuilder, ButtonStyle, ActionRowBuilder } from "discord.js";
 import {
   getWelcomeMessage,
   getUserInfoModal,
   submitUserInfoModal
 } from "./interactions/userOnboard.js";
 import {
+  signUpCourseForm,
+  submitCourseForm
+} from "./interactions/signupCourse.js";
+import {
   getTimeForm,
   updateTimeCache,
   submitTimeForm
-} from "./interactions/addTime.js"
-import {
-  getSearchForm,
-  submitSearchForm
-} from "./interactions/searchTime.js"
+} from "./interactions/addTime.js";
+import { getSearchForm, submitSearchForm } from "./interactions/searchTime.js";
 
 import dotenv from "dotenv";
 
@@ -31,16 +28,12 @@ const chatBotClient = new Client({
     GatewayIntentBits.MessageContent,
     GatewayIntentBits.GuildMessageReactions
   ],
-  partials: [
-    Partials.Message,
-    Partials.Reaction,
-    Partials.Channel
-  ]
+  partials: [Partials.Message, Partials.Reaction, Partials.Channel]
 });
 
 /**
  * @type {Object.<string, { date: Date, startTime: number, endTime: number}>}
- * @description In-memory map to cache user selections temporarily during their session
+ * @description In-memory map to cache user selections for teacher add available time
  * @property {string} key - User's discord id
  * @property {Date} value.date
  * @property {number} value.startTime - 24 hour
@@ -48,21 +41,30 @@ const chatBotClient = new Client({
  */
 const timeSelectionsMap = new Map();
 
+/**
+ * @type {Object.<string, { channelIds: string[]}>}
+ * @description In-memory map to cache user selections for student add role
+ * @property {string} key - User's discord id
+ * @property {string[]} value.chanelIds
+ */
+const userSelections = new Map();
+
 // Maps to dynamically route interactions to respective handlers
 const customIdHandlers = {
-  "openModal": argsWrapper(getUserInfoModal, chatBotClient),
-  "userInfoModal": submitUserInfoModal,
-  "ddl_startTime": argsWrapper(updateTimeCache, timeSelectionsMap),
-  "ddl_endTime": argsWrapper(updateTimeCache, timeSelectionsMap),
-  "btn_timeslot": argsWrapper(submitTimeForm, timeSelectionsMap),
-  "ddl_teacher": submitSearchForm
+  openModal: argsWrapper(getUserInfoModal, chatBotClient),
+  userInfoModal: submitUserInfoModal,
+  selectCourse: argsWrapper(signUpCourseForm, userSelections),
+  btn_course: argsWrapper(submitCourseForm, userSelections),
+  ddl_startTime: argsWrapper(updateTimeCache, timeSelectionsMap),
+  ddl_endTime: argsWrapper(updateTimeCache, timeSelectionsMap),
+  btn_timeslot: argsWrapper(submitTimeForm, timeSelectionsMap),
+  ddl_teacher: submitSearchForm
 };
 
 const commandNameHandlers = {
   "add-available-time": argsWrapper(getTimeForm, timeSelectionsMap),
   "search-available-time": getSearchForm
 };
-
 
 /**
  * @function createInteractionHandler
@@ -74,7 +76,7 @@ const commandNameHandlers = {
 function argsWrapper(func, ...args) {
   return async (interaction) => {
     await func(interaction, ...args);
-  }
+  };
 }
 
 /**
@@ -83,20 +85,19 @@ function argsWrapper(func, ...args) {
  * @description Determines the appropriate handler for the interaction and executes it
  * @param {Interaction} interaction - Discord interaction object triggered by user
  */
-async function handleInteraction(interaction){
+async function handleInteraction(interaction) {
   let handler;
 
-  if (interaction.isChatInputCommand()){
+  if (interaction.isChatInputCommand()) {
     handler = commandNameHandlers[interaction.commandName];
-  }
-  else{
+  } else {
     handler = customIdHandlers[interaction.customId];
   }
 
-  if (!handler){
-    console.log(`No handler for interaction. CustomId: ${interaction.customId}, CommandName: ${interaction.commandName}`);
+  if (!handler) {
+    return;
   }
-  
+
   await handler(interaction);
 }
 
@@ -110,7 +111,7 @@ chatBotClient.on(Events.GuildMemberAdd, async (member) => {
 
 chatBotClient.on(Events.InteractionCreate, async (interaction) => {
   await handleInteraction(interaction);
-})
+});
 
 // Login Discord
 chatBotClient.login(process.env.TOKEN);

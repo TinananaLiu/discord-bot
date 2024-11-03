@@ -1,8 +1,4 @@
-import {
-  ButtonBuilder,
-  ButtonStyle,
-  ActionRowBuilder
-} from "discord.js";
+import { ButtonBuilder, ButtonStyle, ActionRowBuilder } from "discord.js";
 
 export const buildTimeSlotButton = () => {
   return new ActionRowBuilder().addComponents(
@@ -10,5 +6,14 @@ export const buildTimeSlotButton = () => {
       .setCustomId("btn_timeslot")
       .setLabel("Submit")
       .setStyle(ButtonStyle.Primary)
-  )
+  );
+};
+
+export const submitCourseButton = () => {
+  return new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId("btn_course")
+      .setLabel("Submit")
+      .setStyle(ButtonStyle.Primary)
+  );
 };
