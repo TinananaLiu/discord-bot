@@ -1,8 +1,11 @@
 import {
-  buildTeacherRow
+  buildTeacherRow,
+  buildReserveTimeRow
 } from "./components/dropDownList.js";
 import {
-  getAvailableTime
+  getAvailableTime,
+  getAvailableTimeByDate,
+  postReserveTime
 } from "../api/api.js";
 
 export const getSearchForm = async (interaction) => {
@@ -10,7 +13,6 @@ export const getSearchForm = async (interaction) => {
     (role) => role.name === "Tutors"
   );
 
-  // 如果找不到 "Teachers" 角色，回傳錯誤訊息
   if (!teacherRole) {
     return interaction.reply({
       content: 'No "Teachers" role found in the server.',
@@ -18,7 +20,7 @@ export const getSearchForm = async (interaction) => {
     });
   }
 
-  await interaction.guild.members.fetch(); // 確保所有成員都已載入
+  await interaction.guild.members.fetch();
 
   const teachers = interaction.guild.members.cache.filter((member) =>
     member.roles.cache.has(teacherRole.id)
@@ -32,13 +34,12 @@ export const getSearchForm = async (interaction) => {
   }
 
   const teacherOptions = teachers.map((teacher) => ({
-    label: teacher.user.username, // 老師名稱
-    value: teacher.user.id // 老師的 ID
+    label: teacher.user.username,
+    value: teacher.user.id
   }));
 
   const row = buildTeacherRow(teacherOptions);
 
-  // 回應選單訊息
   await interaction.reply({
     content: "Please select a teacher to view available times:",
     components: [row],
@@ -57,7 +58,7 @@ export const submitSearchForm = async (interaction) => {
     });
   }
 
-  await interaction.deferReply(); // 延遲回覆，讓用戶知道我們在處理中
+  await interaction.deferReply();
 
   try {
     // API calling
@@ -76,16 +77,104 @@ export const submitSearchForm = async (interaction) => {
         )}`
       );
     } else {
-      // 如果老師沒有可用時間
       await interaction.followUp(
         "The selected teacher has no available times."
       );
     }
   } catch (error) {
-    // 錯誤處理
     console.error(error);
     await interaction.followUp(
       "Sorry, something went wrong while fetching the available times."
     );
   }
+};
+
+export const getReserveForm = async (interaction) => {
+  if (
+    !interaction.isChatInputCommand() ||
+    interaction.commandName !== "reserve-available-time"
+  ) {
+    return;
+  }
+
+  const date = interaction.options.getInteger("date");
+  const parsedDate = parseDate(date.toString());
+  const formattedDate = formatDate(parsedDate);
+
+  const data = await getAvailableTimeByDate(date);
+  const availableTimes = data.availableTimeSlots;
+  console.log(availableTimes);
+
+  const reserveTimeOptions = availableTimes.map((slot) => ({
+    label: `${slot.start_time} - ${slot.end_time}`,
+    value: slot.id
+  }));
+
+  const reserveTimeRow = buildReserveTimeRow(reserveTimeOptions);
+
+  await interaction.reply({
+    content: `Date: ${formattedDate} \nSelect from below options to reserve an available time slot.\n`,
+    components: [reserveTimeRow],
+    ephemeral: true
+  });
+};
+
+export const submitReserveForm = async (interaction) => {
+  const selectedTimeSlotId = interaction.values[0];
+
+  // Dummy check
+  if (!selectedTimeSlotId) {
+    return await interaction.reply({
+      content: "Please select a time slot.",
+      ephemeral: true
+    });
+  }
+
+  try {
+    // API calling
+    const data = {
+      timeSlotId: selectedTimeSlotId
+    };
+    await postReserveTime(data, interaction.user.id);
+
+    // Reply in DC channel
+    //const formattedDate = formatDate(date);
+    await interaction.update({
+      // content: `Available time slot is reserved successfully: \n\nDate: ${formattedDate} \nTime: ${}`,
+      content: "Available time slot is reserved successfully",
+      components: [],
+      ephemeral: true
+    });
+  } catch (error) {
+    console.error(error);
+    await interaction.reply({
+      content:
+        "Sorry, something went wrong while reserving the available time slot.",
+      components: [],
+      ephemeral: true
+    });
+  }
+};
+
+// Helper Functions
+// -------------------------------------------------------------
+function parseDate(dateString) {
+  const year = parseInt(dateString.substring(0, 4), 10);
+  const month = parseInt(dateString.substring(4, 6), 10) - 1; // Month is 0-based
+  const day = parseInt(dateString.substring(6, 8), 10);
+
+  const parsedDate = new Date(year, month, day);
+
+  return parsedDate;
+}
+
+function formatDate(dateObj) {
+  const formattedDate =
+    dateObj.getFullYear() +
+    "-" +
+    String(dateObj.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(dateObj.getDate()).padStart(2, "0");
+
+  return formattedDate;
 }

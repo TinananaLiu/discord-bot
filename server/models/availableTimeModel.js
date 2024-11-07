@@ -51,6 +51,51 @@ export const getTimeSlot = async (teacherId) => {
   return availableTimeSlots;
 };
 
+export const getTimeSlotByDate = async (parsedDate) => {
+  const formattedDate = parsedDate.toISOString().split("T")[0];
+
+  const availableTimeSlots = await db.any(
+    `
+    SELECT id, start_time, end_time 
+    FROM "dc-bot".available_time 
+    WHERE date = $1::date AND status = false
+    ORDER BY start_time ASC
+    `,
+    [formattedDate]
+  );
+  return availableTimeSlots;
+};
+
+export const insertReserveTime = async (timeSlotId, studentId) => {
+  const reserveTimeId = await db.any(
+    `
+    SET search_path TO "dc-bot";
+    BEGIN;
+    
+    -- Lock the reservation table to prevent concurrent writes.
+    LOCK TABLE reservation IN EXCLUSIVE MODE;
+
+    -- Check if the time_slot_id already exists.
+    DO
+    $$
+    BEGIN
+        IF EXISTS (SELECT 1 FROM reservation WHERE time_slot_id = $1) THEN
+            RAISE EXCEPTION 'The time_slot_id already exists';
+        ELSE
+            -- Insert the new reservation if the time_slot_id doesn't exist.
+            INSERT INTO reservation (time_slot_id, student_id)
+            VALUES ($1, $2);
+        END IF;
+    END
+    $$;
+
+    COMMIT;
+    `,
+    [timeSlotId, studentId]
+  );
+  return reserveTimeId;
+};
+
 // Helper function to parse time into a Date object
 function parseTime(time) {
   const [hour, minute] = time.split(":").map(Number);

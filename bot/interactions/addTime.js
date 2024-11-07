@@ -1,17 +1,15 @@
-import {
-  buildTimeSlotButton
-} from "./components/button.js";
+import { buildTimeSlotButton } from "./components/button.js";
 import {
   buildStartTimeRow,
   buildEndTimeRow
 } from "./components/dropDownList.js";
-import {
-  postAvailableTime
-} from "../api/api.js"
-
+import { postAvailableTime } from "../api/api.js";
 
 export const getTimeForm = async (interaction, timeSelectionsMap) => {
-  if (!interaction.isChatInputCommand() || interaction.commandName !== "add-available-time"){
+  if (
+    !interaction.isChatInputCommand() ||
+    interaction.commandName !== "add-available-time"
+  ) {
     return;
   }
 
@@ -29,27 +27,33 @@ export const getTimeForm = async (interaction, timeSelectionsMap) => {
   }
 
   const btn_timeslot = buildTimeSlotButton();
-  const startTimeRow = buildStartTimeRow()
-  const endTimeRow = buildEndTimeRow()
+  const startTimeRow = buildStartTimeRow();
+  const endTimeRow = buildEndTimeRow();
 
   await interaction.reply({
-    content: `Date: ${formattedDate} \nSelect from below opetions to create available time slot.\n`,
+    content: `Date: ${formattedDate} \nSelect from below options to create available time slot.\n`,
     components: [startTimeRow, endTimeRow, btn_timeslot],
     ephemeral: true
   });
-}
+};
 
 export const updateTimeCache = async (interaction, timeSelectionsMap) => {
-  if (!interaction.isStringSelectMenu()){
+  if (!interaction.isStringSelectMenu()) {
     return;
   }
-  
-  if (!(interaction.customId === "ddl_startTime" || interaction.customId === "ddl_endTime")){
+
+  if (
+    !(
+      interaction.customId === "ddl_startTime" ||
+      interaction.customId === "ddl_endTime"
+    )
+  ) {
     return;
   }
 
   const selectedTime = interaction.values[0];
-  const label = interaction.customId === "ddl_startTime" ? "Start Time" : "End Time";
+  const label =
+    interaction.customId === "ddl_startTime" ? "Start Time" : "End Time";
 
   // If user didn't ad
   if (!timeSelectionsMap.has(interaction.user.id)) {
@@ -70,11 +74,10 @@ export const updateTimeCache = async (interaction, timeSelectionsMap) => {
   timeSelectionsMap.set(interaction.user.id, timeSelection);
 
   await interaction.deferUpdate();
-}
+};
 
 export const submitTimeForm = async (interaction, timeSelectionsMap) => {
-
-  if (!interaction.isButton() || interaction.customId !== "btn_timeslot"){
+  if (!interaction.isButton() || interaction.customId !== "btn_timeslot") {
     return;
   }
 
@@ -90,26 +93,57 @@ export const submitTimeForm = async (interaction, timeSelectionsMap) => {
   }
 
   // API calling
-  const { date, startTime, endTime } = timeSelection;
-  const data = {
-    date: date,
-    startTime: startTime,
-    endTime: endTime
-  };
-  await postAvailableTime(data, interaction.user.id);
+  // 補try catch
+  // const { date, startTime, endTime } = timeSelection;
+  // const data = {
+  //   date: date,
+  //   startTime: startTime,
+  //   endTime: endTime
+  // };
+  // await postAvailableTime(data, interaction.user.id);
 
-  // Reply in DC channel
-  const formattedDate = formatDate(date);
-  await interaction.update({
-    content: `Available time slots are created successfully: \n\nTeacher:<@${interaction.user.id}> \nDate: ${formattedDate} \nFrom: ${startTime} \nTo: ${endTime}`,
-    components: [],
-    ephemeral: true
-  });
+  // // Reply in DC channel
+  // const formattedDate = formatDate(date);
+  // await interaction.update({
+  //   content: `Available time slots are created successfully: \n\nTeacher:<@${interaction.user.id}> \nDate: ${formattedDate} \nFrom: ${startTime} \nTo: ${endTime}`,
+  //   components: [],
+  //   ephemeral: true
+  // });
 
-  // Delete memory record
-  timeSelectionsMap.delete(interaction.user.id);
-}
+  // // Delete memory record
+  // timeSelectionsMap.delete(interaction.user.id);
+  try {
+    const { date, startTime, endTime } = timeSelection;
+    const data = {
+      date: date,
+      startTime: startTime,
+      endTime: endTime
+    };
 
+    // 發送可用時間到資料庫
+    await postAvailableTime(data, interaction.user.id);
+
+    // 格式化日期並在 Discord 頻道回應
+    const formattedDate = formatDate(date);
+    await interaction.update({
+      content: `Available time slots are created successfully: \n\nTeacher:<@${interaction.user.id}> \nDate: ${formattedDate} \nFrom: ${startTime} \nTo: ${endTime}`,
+      components: [],
+      ephemeral: true
+    });
+
+    // 刪除記憶體中的記錄
+    timeSelectionsMap.delete(interaction.user.id);
+  } catch (error) {
+    console.error("發生錯誤:", error);
+
+    // 若發生錯誤，回應錯誤訊息給用戶
+    await interaction.reply({
+      content:
+        "An error occurred while creating available time slots. Please try again later.",
+      ephemeral: true
+    });
+  }
+};
 
 // Helper Functions
 // -------------------------------------------------------------

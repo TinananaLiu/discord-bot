@@ -1,5 +1,4 @@
 import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
-import { ButtonBuilder, ButtonStyle, ActionRowBuilder } from "discord.js";
 import {
   getWelcomeMessage,
   getUserInfoModal,
@@ -14,7 +13,12 @@ import {
   updateTimeCache,
   submitTimeForm
 } from "./interactions/addTime.js";
-import { getSearchForm, submitSearchForm } from "./interactions/searchTime.js";
+import {
+  getSearchForm,
+  submitSearchForm,
+  getReserveForm,
+  submitReserveForm
+} from "./interactions/searchTime.js";
 
 import dotenv from "dotenv";
 
@@ -58,12 +62,14 @@ const customIdHandlers = {
   ddl_startTime: argsWrapper(updateTimeCache, timeSelectionsMap),
   ddl_endTime: argsWrapper(updateTimeCache, timeSelectionsMap),
   btn_timeslot: argsWrapper(submitTimeForm, timeSelectionsMap),
-  ddl_teacher: submitSearchForm
+  ddl_teacher: submitSearchForm,
+  ddl_reserve: submitReserveForm
 };
 
 const commandNameHandlers = {
   "add-available-time": argsWrapper(getTimeForm, timeSelectionsMap),
-  "search-available-time": getSearchForm
+  "search-available-time": getSearchForm,
+  "reserve-available-time": getReserveForm
 };
 
 /**

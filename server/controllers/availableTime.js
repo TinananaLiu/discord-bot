@@ -1,4 +1,9 @@
-import { insertTimeSlot, getTimeSlot } from "../models/availableTimeModel.js";
+import {
+  insertTimeSlot,
+  getTimeSlot,
+  getTimeSlotByDate,
+  insertReserveTime
+} from "../models/availableTimeModel.js";
 
 export const createAvailableTime = async (req, res) => {
   const teacherId = req.params.userId;
@@ -25,3 +30,37 @@ export const getAvailableTime = async (req, res) => {
     return res.status(500).json({ message: error.message });
   }
 };
+
+export const getAvailableTimeByDate = async (req, res) => {
+  const date = req.params.date;
+  const parsedDate = parseDate(date.toString());
+  try {
+    const availableTimeSlots = await getTimeSlotByDate(parsedDate);
+    return res.status(201).json({ availableTimeSlots });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const createReserveTime = async (req, res) => {
+  const studentId = req.params.userId;
+  const { timeSlotId } = req.body;
+  try {
+    const reserveTimeId = await insertReserveTime(timeSlotId, studentId);
+    return res.status(201).json({ reserveTimeId });
+  } catch (error) {
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+// Helper Functions
+// -------------------------------------------------------------
+function parseDate(dateString) {
+  const year = parseInt(dateString.substring(0, 4), 10);
+  const month = parseInt(dateString.substring(4, 6), 10) - 1; // Month is 0-based
+  const day = parseInt(dateString.substring(6, 8), 10);
+
+  const parsedDate = new Date(year, month, day);
+
+  return parsedDate;
+}
