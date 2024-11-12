@@ -63,7 +63,7 @@ export const getTimeSlotByDate = async (parsedDate) => {
     `,
     [formattedDate]
   );
-  return availableTimeSlots;
+  return availableTimeSlots.length > 0 ? availableTimeSlots : [];
 };
 
 export const insertReserveTime = async (timeSlotId, studentId) => {

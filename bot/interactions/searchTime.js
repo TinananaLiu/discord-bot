@@ -68,7 +68,8 @@ export const submitSearchForm = async (interaction) => {
     // Reply in DC channel
     if (availableTimes.length > 0) {
       const formattedTimes = availableTimes.map((slot) => {
-        return `${slot.start_time} - ${slot.end_time}`;
+        const formatedDate = formatDate(new Date(slot.date));
+        return `${formatedDate}: ${slot.start_time} - ${slot.end_time}`;
       });
 
       await interaction.followUp(
@@ -103,7 +104,13 @@ export const getReserveForm = async (interaction) => {
 
   const data = await getAvailableTimeByDate(date);
   const availableTimes = data.availableTimeSlots;
-  console.log(availableTimes);
+
+  if (!availableTimes || availableTimes.length === 0) {
+    return await interaction.reply({
+      content: `Date: ${formattedDate} \nNo available time slots for this date.`,
+      ephemeral: true
+    });
+  }
 
   const reserveTimeOptions = availableTimes.map((slot) => ({
     label: `${slot.start_time} - ${slot.end_time}`,
