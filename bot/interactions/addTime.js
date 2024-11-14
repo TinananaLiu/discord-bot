@@ -55,7 +55,7 @@ export const updateTimeCache = async (interaction, timeSelectionsMap) => {
   const label =
     interaction.customId === "ddl_startTime" ? "Start Time" : "End Time";
 
-  // If user didn't ad
+  // If user didn't add
   if (!timeSelectionsMap.has(interaction.user.id)) {
     await interaction.reply({
       content: `Something went wrong... please try again...`,
@@ -142,7 +142,7 @@ function parseDate(dateString) {
   const month = parseInt(dateString.substring(4, 6), 10) - 1; // Month is 0-based
   const day = parseInt(dateString.substring(6, 8), 10);
 
-  const parsedDate = new Date(year, month, day);
+  const parsedDate = new Date(Date.UTC(year, month, day));
 
   return parsedDate;
 }
