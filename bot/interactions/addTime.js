@@ -92,26 +92,6 @@ export const submitTimeForm = async (interaction, timeSelectionsMap) => {
     });
   }
 
-  // API calling
-  // 補try catch
-  // const { date, startTime, endTime } = timeSelection;
-  // const data = {
-  //   date: date,
-  //   startTime: startTime,
-  //   endTime: endTime
-  // };
-  // await postAvailableTime(data, interaction.user.id);
-
-  // // Reply in DC channel
-  // const formattedDate = formatDate(date);
-  // await interaction.update({
-  //   content: `Available time slots are created successfully: \n\nTeacher:<@${interaction.user.id}> \nDate: ${formattedDate} \nFrom: ${startTime} \nTo: ${endTime}`,
-  //   components: [],
-  //   ephemeral: true
-  // });
-
-  // // Delete memory record
-  // timeSelectionsMap.delete(interaction.user.id);
   try {
     const { date, startTime, endTime } = timeSelection;
     const data = {
@@ -121,15 +101,24 @@ export const submitTimeForm = async (interaction, timeSelectionsMap) => {
     };
 
     // 發送可用時間到資料庫
-    await postAvailableTime(data, interaction.user.id);
+    const response = await postAvailableTime(data, interaction.user.id);
 
-    // 格式化日期並在 Discord 頻道回應
-    const formattedDate = formatDate(date);
-    await interaction.update({
-      content: `Available time slots are created successfully: \n\nTeacher:<@${interaction.user.id}> \nDate: ${formattedDate} \nFrom: ${startTime} \nTo: ${endTime}`,
-      components: [],
-      ephemeral: true
-    });
+    if (response.status === 400){
+      await interaction.update({
+        content: `Detected duplicated available time slot. \nPlease use command "/search-available-time" to check your existing time slot`,
+        components: [],
+        ephemeral: true
+      });
+    }
+    else{
+      // 格式化日期並在 Discord 頻道回應
+      const formattedDate = formatDate(date);
+      await interaction.update({
+        content: `Available time slots are created successfully: \n\nTeacher:<@${interaction.user.id}> \nDate: ${formattedDate} \nFrom: ${startTime} \nTo: ${endTime}`,
+        components: [],
+        ephemeral: true
+      });
+    }
 
     // 刪除記憶體中的記錄
     timeSelectionsMap.delete(interaction.user.id);
@@ -137,9 +126,10 @@ export const submitTimeForm = async (interaction, timeSelectionsMap) => {
     console.error("發生錯誤:", error);
 
     // 若發生錯誤，回應錯誤訊息給用戶
-    await interaction.reply({
+    await interaction.update({
       content:
         "An error occurred while creating available time slots. Please try again later.",
+      components: [],
       ephemeral: true
     });
   }

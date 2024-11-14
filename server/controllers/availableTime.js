@@ -17,6 +17,9 @@ export const createAvailableTime = async (req, res) => {
     );
     return res.status(201).json({ timeSlotIds });
   } catch (error) {
+    if (error.name === "ConflictError"){
+      return res.status(400).json({ message: error.message});
+    }
     return res.status(500).json({ message: error.message });
   }
 };

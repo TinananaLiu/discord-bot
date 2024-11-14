@@ -8,18 +8,22 @@ const apiClient = axios.create({
 });
 
 async function postAvailableTime(data, userId) {
-  console.log(userId);
-  const response = await apiClient.post(
-    `/available_time/teacher/${userId}`,
-    data
-  );
-  return response;
+  try{
+    const response = await apiClient.post(
+      `/available_time/teacher/${userId}`,
+      data
+    );
+    return response;
+  }
+  catch(error){
+    if (error.response && error.response.status === 400) {
+      return error.response;
+    }
+    else {
+      throw new Error("Server response with status code: 500");
+    }
+  }
 }
-
-// async function getAvailableTime(teacherId) {
-//   const response = await apiClient.get(`/available_time/teacher/${teacherId}`);
-//   return response.data;
-// }
 
 async function getAvailableTime(teacherId) {
   const response = await apiClient.get(`/available_time/teacher/${teacherId}`);
