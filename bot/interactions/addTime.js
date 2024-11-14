@@ -13,6 +13,14 @@ export const getTimeForm = async (interaction, timeSelectionsMap) => {
     return;
   }
 
+  if (interaction.member.roles.cache.some(role => role.name !== "Tutors")){
+    await interaction.reply({
+      content: `You are not a tutor!!`,
+      ephemeral: true
+    });
+    return;
+  }
+
   const date = interaction.options.getInteger("date");
   const parsedDate = parseDate(date.toString());
   const formattedDate = formatDate(parsedDate);
