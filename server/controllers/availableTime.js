@@ -63,7 +63,7 @@ function parseDate(dateString) {
   const month = parseInt(dateString.substring(4, 6), 10) - 1; // Month is 0-based
   const day = parseInt(dateString.substring(6, 8), 10);
 
-  const parsedDate = new Date(year, month, day);
+  const parsedDate = new Date(Date.UTC(year, month, day));
 
   return parsedDate;
 }

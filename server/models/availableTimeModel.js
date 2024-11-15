@@ -60,7 +60,7 @@ export const getTimeSlot = async (teacherId) => {
     SELECT date, start_time, end_time 
     FROM "dc-bot".available_time 
     WHERE teacher_id = $1
-    ORDER BY start_time ASC
+    ORDER BY date, start_time ASC
     `,
     [teacherId]
   );
@@ -83,33 +83,51 @@ export const getTimeSlotByDate = async (parsedDate) => {
 };
 
 export const insertReserveTime = async (timeSlotId, studentId) => {
-  const reserveTimeId = await db.any(
-    `
-    SET search_path TO "dc-bot";
-    BEGIN;
-    
-    -- Lock the reservation table to prevent concurrent writes.
-    LOCK TABLE reservation IN EXCLUSIVE MODE;
+  try {
+    const newReserveId = await db.tx(async (t) => {
+      await t.none(`SET search_path TO "dc-bot"`);
 
-    -- Check if the time_slot_id already exists.
-    DO
-    $$
-    BEGIN
-        IF EXISTS (SELECT 1 FROM reservation WHERE time_slot_id = $1) THEN
-            RAISE EXCEPTION 'The time_slot_id already exists';
-        ELSE
-            -- Insert the new reservation if the time_slot_id doesn't exist.
-            INSERT INTO reservation (time_slot_id, student_id)
-            VALUES ($1, $2);
-        END IF;
-    END
-    $$;
+      // Lock the reservation table to prevent concurrent writes
+      await t.none(`LOCK TABLE reservation IN EXCLUSIVE MODE`);
 
-    COMMIT;
-    `,
-    [timeSlotId, studentId]
-  );
-  return reserveTimeId;
+      // Check if the time_slot_id already exists
+      const existingReservation = await t.oneOrNone(
+        `SELECT 1 FROM reservation WHERE time_slot_id = $1`,
+        [timeSlotId]
+      );
+
+      if (existingReservation) {
+        throw new Error('The time_slot_id already exists');
+      }
+
+      const updatedSlot = await t.oneOrNone(
+        `UPDATE available_time
+         SET status = true
+         WHERE id = $1
+         RETURNING id`,
+        [timeSlotId]
+      );
+
+      if (!updatedSlot) {
+        throw new Error('The time slot is either unavailable or does not exist');
+      }
+
+      const newReservation = await t.one(
+        `INSERT INTO reservation (time_slot_id, student_id)
+         VALUES ($1, $2)
+         RETURNING id`,
+        [timeSlotId, studentId]
+      );
+
+      // Insert the new reservation if the time_slot_id doesn't exist
+      return newReservation.id;
+    });
+
+    return newReserveId;
+  } catch (error) {
+    console.error('Error during "insertReserveTime":', error);
+    throw error; // Ensure the error propagates to notify the caller
+  }
 };
 
 // Helper function to parse time into a Date object
