@@ -21,6 +21,7 @@ import {
 } from "./interactions/searchTime.js";
 
 import dotenv from "dotenv";
+import config from "./config.js";
 
 dotenv.config();
 
@@ -107,8 +108,16 @@ async function handleInteraction(interaction) {
   await handler(interaction);
 }
 
-chatBotClient.once(Events.ClientReady, () => {
+chatBotClient.once(Events.ClientReady, async () => {
   console.log("Bot is online!");
+
+  const guild = chatBotClient.guilds.cache.get(config.guildId);
+  if (guild){
+    await guild.members.fetch();
+    await guild.members.fetch();
+    await guild.channels.fetch();
+    console.log("refresh cache successfully.")
+  }
 });
 
 chatBotClient.on(Events.GuildMemberAdd, async (member) => {
