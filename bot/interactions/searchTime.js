@@ -7,6 +7,7 @@ import {
   getAvailableTimeByDate,
   postReserveTime
 } from "../api/api.js";
+import dateUtil from "../utils/dateUtil.js";
 
 export const getSearchForm = async (interaction) => {
   const teacherRole = interaction.guild.roles.cache.find(
@@ -68,7 +69,7 @@ export const submitSearchForm = async (interaction) => {
     // Reply in DC channel
     if (availableTimes.length > 0) {
       const formattedTimes = availableTimes.map((slot) => {
-        const formatedDate = formatDate(new Date(slot.date));
+        const formatedDate = dateUtil.formatDate(new Date(slot.date));
         return `${formatedDate}: ${slot.start_time} - ${slot.end_time}`;
       });
 
@@ -99,8 +100,8 @@ export const getReserveForm = async (interaction) => {
   }
 
   const date = interaction.options.getInteger("date");
-  const parsedDate = parseDate(date.toString());
-  const formattedDate = formatDate(parsedDate);
+  const parsedDate = dateUtil.parseDate(date.toString());
+  const formattedDate = dateUtil.formatDate(parsedDate);
 
   const data = await getAvailableTimeByDate(date);
   const availableTimes = data.availableTimeSlots;
@@ -162,26 +163,3 @@ export const submitReserveForm = async (interaction) => {
     });
   }
 };
-
-// Helper Functions
-// -------------------------------------------------------------
-function parseDate(dateString) {
-  const year = parseInt(dateString.substring(0, 4), 10);
-  const month = parseInt(dateString.substring(4, 6), 10) - 1; // Month is 0-based
-  const day = parseInt(dateString.substring(6, 8), 10);
-
-  const parsedDate = new Date(year, month, day);
-
-  return parsedDate;
-}
-
-function formatDate(dateObj) {
-  const formattedDate =
-    dateObj.getFullYear() +
-    "-" +
-    String(dateObj.getMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(dateObj.getDate()).padStart(2, "0");
-
-  return formattedDate;
-}

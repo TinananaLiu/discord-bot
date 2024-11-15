@@ -4,6 +4,7 @@ import {
   buildEndTimeRow
 } from "./components/dropDownList.js";
 import { postAvailableTime } from "../api/api.js";
+import dateUtil from "../utils/dateUtil.js";
 
 export const getTimeForm = async (interaction, timeSelectionsMap) => {
   if (
@@ -13,7 +14,7 @@ export const getTimeForm = async (interaction, timeSelectionsMap) => {
     return;
   }
 
-  if (interaction.member.roles.cache.some(role => role.name !== "Tutors")){
+  if (!interaction.member.roles.cache.some(role => role.name === "Tutors")){
     await interaction.reply({
       content: `You are not a tutor!!`,
       ephemeral: true
@@ -22,8 +23,8 @@ export const getTimeForm = async (interaction, timeSelectionsMap) => {
   }
 
   const date = interaction.options.getInteger("date");
-  const parsedDate = parseDate(date.toString());
-  const formattedDate = formatDate(parsedDate);
+  const parsedDate = dateUtil.parseDate(date.toString());
+  const formattedDate = dateUtil.formatDate(parsedDate);
 
   // Cache current user, for available_time insertion
   if (!timeSelectionsMap.has(interaction.user.id)) {
@@ -120,7 +121,7 @@ export const submitTimeForm = async (interaction, timeSelectionsMap) => {
     }
     else{
       // 格式化日期並在 Discord 頻道回應
-      const formattedDate = formatDate(date);
+      const formattedDate = dateUtil.formatDate(date);
       await interaction.update({
         content: `Available time slots are created successfully: \n\nTeacher:<@${interaction.user.id}> \nDate: ${formattedDate} \nFrom: ${startTime} \nTo: ${endTime}`,
         components: [],
@@ -142,26 +143,3 @@ export const submitTimeForm = async (interaction, timeSelectionsMap) => {
     });
   }
 };
-
-// Helper Functions
-// -------------------------------------------------------------
-function parseDate(dateString) {
-  const year = parseInt(dateString.substring(0, 4), 10);
-  const month = parseInt(dateString.substring(4, 6), 10) - 1; // Month is 0-based
-  const day = parseInt(dateString.substring(6, 8), 10);
-
-  const parsedDate = new Date(Date.UTC(year, month, day));
-
-  return parsedDate;
-}
-
-function formatDate(dateObj) {
-  const formattedDate =
-    dateObj.getFullYear() +
-    "-" +
-    String(dateObj.getMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(dateObj.getDate()).padStart(2, "0");
-
-  return formattedDate;
-}
