@@ -11,8 +11,14 @@ export const buildTimeSlotButton = () => {
 
 export const submitCourseButton = () => {
   return new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId("btn_course")
+  );
+};
+
+export const buildReserveButton = () => {
+  return new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId("btn_course")
+      .setCustomId("btn_reserve")
       .setLabel("Submit")
       .setStyle(ButtonStyle.Primary)
   );

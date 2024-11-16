@@ -46,3 +46,12 @@ export const signUpCourseRow = (courseOptions) => {
       .addOptions(courseOptions) // 添加選項
   );
 };
+
+export const buildReserveTimeRow = (reserveTimeOptions) => {
+  return new ActionRowBuilder().addComponents(
+    new StringSelectMenuBuilder()
+      .setCustomId("ddl_reserve")
+      .setPlaceholder("Select an available time slot you want to reserve")
+      .addOptions(reserveTimeOptions)
+  );
+};

@@ -13,14 +13,27 @@ const commands = [
         description:
           "Please specify the date you want to add, enter in yyyyMMdd format (e.g. 20240214)",
         type: 4,
-        required: true,
-      },
-    ],
+        required: true
+      }
+    ]
   },
   {
     name: "search-available-time",
-    description: "Search teacher's available time",
+    description: "Search teacher's available time"
   },
+  {
+    name: "reserve-available-time",
+    description: "Form for reserve available time",
+    options: [
+      {
+        name: "date",
+        description:
+          "Please specify the date you want to search, enter in yyyyMMdd format (e.g. 20240214)",
+        type: 4,
+        required: true
+      }
+    ]
+  }
 ];
 
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
@@ -30,7 +43,7 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
     console.log("Started refreshing global application (/) commands.");
 
     await rest.put(Routes.applicationCommands(process.env.CLIENT_ID), {
-      body: commands,
+      body: commands
     });
 
     console.log("Successfully reloaded global application (/) commands.");
