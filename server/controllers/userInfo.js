@@ -1,11 +1,11 @@
-import { upsertStudentInfo } from "../models/userinfoModel.js";
+import userInfoModel from "../models/userInfoModel.js";
 
 export const createUserInfo = async (req, res) => {
   const studentId = req.params.userId;
   const { studentName, age, interests } = req.body;
 
   try {
-    const userInfoId = await upsertStudentInfo(
+    const userInfoId = await userInfoModel.upsert(
       studentId,
       studentName,
       parseInt(age),
