@@ -4,7 +4,7 @@ import {
   buildEndTimeRow
 } from "./components/dropDownList.js";
 import { postAvailableTime } from "../api/api.js";
-import dateUtil from "../utils/dateUtil.js";
+import DateUtil from "../utils/dateUtil.js";
 
 export const getTimeForm = async (interaction, timeSelectionsMap) => {
   if (
@@ -23,8 +23,8 @@ export const getTimeForm = async (interaction, timeSelectionsMap) => {
   }
 
   const date = interaction.options.getInteger("date");
-  const parsedDate = dateUtil.parseDate(date.toString());
-  const formattedDate = dateUtil.formatDate(parsedDate);
+  const parsedDate = DateUtil.parseDate(date.toString());
+  const formattedDate = DateUtil.formatDate(parsedDate);
 
   // Cache current user, for available_time insertion
   if (!timeSelectionsMap.has(interaction.user.id)) {
@@ -121,7 +121,7 @@ export const submitTimeForm = async (interaction, timeSelectionsMap) => {
     }
     else{
       // 格式化日期並在 Discord 頻道回應
-      const formattedDate = dateUtil.formatDate(date);
+      const formattedDate = DateUtil.formatDate(date);
       await interaction.update({
         content: `Available time slots are created successfully: \n\nTeacher:<@${interaction.user.id}> \nDate: ${formattedDate} \nFrom: ${startTime} \nTo: ${endTime}`,
         components: [],

@@ -73,7 +73,7 @@ class AvailableTimeModel extends BaseModel{
         `
         SELECT date, start_time, end_time 
         FROM "${this.schemaName}".available_time 
-        WHERE teacher_id = $1
+        WHERE teacher_id = $1 AND status = false
         ORDER BY date, start_time ASC
         `,
         [teacherId]

@@ -7,7 +7,7 @@ import {
   getAvailableTimeByDate,
   postReserveTime
 } from "../api/api.js";
-import dateUtil from "../utils/dateUtil.js";
+import DateUtil from "../utils/dateUtil.js";
 
 export const getSearchForm = async (interaction) => {
   const teacherRole = interaction.guild.roles.cache.find(
@@ -68,15 +68,10 @@ export const submitSearchForm = async (interaction) => {
 
     // Reply in DC channel
     if (availableTimes.length > 0) {
-      const formattedTimes = availableTimes.map((slot) => {
-        const formatedDate = dateUtil.formatDate(new Date(slot.date));
-        return `${formatedDate}: ${slot.start_time} - ${slot.end_time}`;
-      });
+      const msg = DateUtil.getRetrieveResultMessage(availableTimes);
 
       await interaction.followUp(
-        `The available times for the selected teacher are:\n- ${formattedTimes.join(
-          "\n- "
-        )}`
+        `The available times for the selected teacher are:\n ${msg}`
       );
     } else {
       await interaction.followUp(
@@ -100,8 +95,8 @@ export const getReserveForm = async (interaction) => {
   }
 
   const date = interaction.options.getInteger("date");
-  const parsedDate = dateUtil.parseDate(date.toString());
-  const formattedDate = dateUtil.formatDate(parsedDate);
+  const parsedDate = DateUtil.parseDate(date.toString());
+  const formattedDate = DateUtil.formatDate(parsedDate);
 
   const data = await getAvailableTimeByDate(date);
   const availableTimes = data.availableTimeSlots;
