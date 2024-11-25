@@ -1,4 +1,4 @@
-class dateUtil{
+class DateUtil{
 
   /**
    * @method parseDate
@@ -32,6 +32,23 @@ class dateUtil{
 
     return formattedDate;
   }
+
+  static getRetrieveResultMessage(availableTimes){
+    let output = "";
+    const memo = new Set();
+
+    availableTimes.map((slot) => {
+      const formatedDate = this.formatDate(new Date(slot.date));
+      if (!memo.has(formatedDate)){
+        memo.add(formatedDate);
+        output += `\n ${formatedDate}: \n`;
+      }
+      output += ` - ${slot.start_time} - ${slot.end_time} \n`;
+    });
+
+    output.trim();
+    return output;
+  }
 }
 
-export default dateUtil;
+export default DateUtil;
