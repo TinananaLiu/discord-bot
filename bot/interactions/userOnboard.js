@@ -3,11 +3,9 @@ import { buildUserInfoModal } from "./components/modal.js";
 import { postUserInfo } from "../api/api.js";
 
 export const getWelcomeMessage = async (member) => {
-  const welcomeChannel = member.guild.channels.cache.find(
-    (channel) => channel.name === "welcome-and-rules"
-  );
-  if (welcomeChannel) {
-    await welcomeChannel.send({
+  const rulesChannel = member.guild.channels.cache.get(config.rulesChannelId);
+  if (rulesChannel) {
+    await rulesChannel.send({
       content: `👋 歡迎 ${member.displayName} 加入！請閱讀伺服器規則並點擊該訊息的 ✅ 表情來表示同意規則。`,
       ephemeral: true
     });
@@ -15,7 +13,7 @@ export const getWelcomeMessage = async (member) => {
 };
 
 export const getUserInfoModal = async (interaction, chatBotClient) => {
-  if (!interaction.isButton || interaction.customId !== "openModal") {
+  if (!interaction.isButton || interaction.customId !== "btn_userinfo") {
     return;
   }
 
@@ -24,6 +22,14 @@ export const getUserInfoModal = async (interaction, chatBotClient) => {
   if (!member) {
     return await interaction.reply({
       content: "發生了預期以外的錯誤，請稍後再重新填寫。",
+      ephemeral: true
+    });
+  }
+
+  // 檢查用戶是否已經有 onboardRoleId
+  if (member.roles.cache.has(config.onboardRoleId)) {
+    return await interaction.reply({
+      content: "您已經完成了身份註冊，無需再次填寫表單。",
       ephemeral: true
     });
   }
@@ -37,14 +43,16 @@ export const getUserInfoModal = async (interaction, chatBotClient) => {
       config.rulesMessageId
     );
 
-    const hasReacted = rulesMessage.reactions.cache
-      .get("✅")
-      ?.users.cache.has(interaction.user.id);
+    // 使用 fetch() 確保反應緩存是最新的
+    const reaction = await rulesMessage.reactions.cache.get("✅")?.fetch();
+
+    // 從 API 獲取最新的用戶反應數據
+    const usersReacted = await reaction.users.fetch();
+    const hasReacted = usersReacted.has(interaction.user.id);
 
     if (!hasReacted) {
       return await interaction.reply({
-        content:
-          "請先在 #welcome-and-rules 頻道按 ✅ 表情，同意規範後再填寫表單。",
+        content: `請先在 #${rulesChannel.name} 頻道按 ✅ 表情，同意規範後再填寫表單。`,
         ephemeral: true
       });
     }
@@ -60,7 +68,7 @@ export const getUserInfoModal = async (interaction, chatBotClient) => {
   }
 };
 
-export const submitUserInfoModal = async (interaction) => {
+export const submitUserInfoModal = async (interaction, chatBotClient) => {
   if (
     !interaction.isModalSubmit() ||
     !interaction.customId === "userInfoModal"
@@ -79,6 +87,10 @@ export const submitUserInfoModal = async (interaction) => {
     interests: interests
   };
 
+  const signUpChannel = chatBotClient.channels.cache.get(
+    config.signUpChannelId
+  );
+
   try {
     // 發送資料到後端
     await postUserInfo(data, userId);
@@ -87,7 +99,7 @@ export const submitUserInfoModal = async (interaction) => {
     if (member) {
       await member.roles.add(config.onboardRoleId);
       await interaction.reply({
-        content: `${member.displayName}，你已成功加入社群，請在 #sign-up 頻道進行選課！`,
+        content: `${member.displayName}，你已成功加入社群，請在 #${signUpChannel.name} 頻道進行選課！`,
         ephemeral: true
       });
     } else {
