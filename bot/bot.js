@@ -20,6 +20,12 @@ import {
   submitReserveForm
 } from "./interactions/searchTime.js";
 
+import {
+  signupCourseButton,
+  userInfoButton
+} from "./interactions/components/button.js";
+import { loadState, saveState } from "./utils/stateManage.js";
+
 import dotenv from "dotenv";
 import config from "./config.js";
 
@@ -56,9 +62,9 @@ const userSelections = new Map();
 
 // Maps to dynamically route interactions to respective handlers
 const customIdHandlers = {
-  openModal: argsWrapper(getUserInfoModal, chatBotClient),
-  userInfoModal: submitUserInfoModal,
-  selectCourse: argsWrapper(signUpCourseForm, userSelections),
+  btn_userinfo: argsWrapper(getUserInfoModal, chatBotClient),
+  userInfoModal: argsWrapper(submitUserInfoModal, chatBotClient),
+  btn_signup: argsWrapper(signUpCourseForm, userSelections),
   btn_course: argsWrapper(submitCourseForm, userSelections),
   ddl_startTime: argsWrapper(updateTimeCache, timeSelectionsMap),
   ddl_endTime: argsWrapper(updateTimeCache, timeSelectionsMap),
@@ -112,11 +118,71 @@ chatBotClient.once(Events.ClientReady, async () => {
   console.log("Bot is online!");
 
   const guild = chatBotClient.guilds.cache.get(config.guildId);
-  if (guild){
+  if (guild) {
     await guild.members.fetch();
     await guild.members.fetch();
     await guild.channels.fetch();
-    console.log("refresh cache successfully.")
+    console.log("refresh cache successfully.");
+  }
+
+  // Execute Once: Check Button Status and Pin
+  const state = loadState();
+
+  // 1. userInfoButton
+  if (!state.hasInitialized.btn_userinfo) {
+    try {
+      const rulesChannel = chatBotClient.channels.cache.get(
+        config.rulesChannelId
+      );
+      const startHereChannel = chatBotClient.channels.cache.get(
+        config.startHereChannelId
+      );
+
+      if (!startHereChannel) {
+        console.error(`找不到 #start-here 頻道，請檢查頻道 ID 是否正確。`);
+      } else {
+        const btn_userinfo = userInfoButton();
+        const sentMessage = await startHereChannel.send({
+          content: `🎉 歡迎新加入的成員！請確保你已在 #${rulesChannel.name} 頻道按過 ✅，然後點擊下方按鈕來完成表單`,
+          components: [btn_userinfo]
+        });
+        await sentMessage.pin();
+        console.log("userInfoButton pinned successfully at #start-here.");
+        state.hasInitialized.btn_userinfo = true;
+        saveState(state);
+      }
+    } catch (error) {
+      console.error("userInfoButton failed:", error);
+    }
+  } else {
+    console.log("userInfoButton already initialized.");
+  }
+
+  // 2. signupCourseButton
+  if (!state.hasInitialized.btn_signup) {
+    try {
+      const signUpChannel = chatBotClient.channels.cache.get(
+        config.signUpChannelId
+      );
+
+      if (!signUpChannel) {
+        console.error(`找不到 #sign-up 頻道，請檢查頻道 ID 是否正確。`);
+      } else {
+        const btn_signup = signupCourseButton();
+        const sentMessage = await signUpChannel.send({
+          content: "🎓 歡迎來到課程選擇～請點擊以下按鈕來註冊你感興趣的課程！",
+          components: [btn_signup]
+        });
+        await sentMessage.pin();
+        console.log("signupCourseButton pinned successfully at #sign-up.");
+        state.hasInitialized.btn_signup = true;
+        saveState(state);
+      }
+    } catch (error) {
+      console.error("signupCourseButton failed:", error);
+    }
+  } else {
+    console.log("signupCourseButton already initialized.");
   }
 });
 
@@ -127,6 +193,39 @@ chatBotClient.on(Events.GuildMemberAdd, async (member) => {
 chatBotClient.on(Events.InteractionCreate, async (interaction) => {
   await handleInteraction(interaction);
 });
+
+// //只執行一次：選課按鈕並釘選
+// chatBotClient.once("ready", async () => {
+//   // 載入狀態
+//   const hasInitialized = loadState();
+//   if (hasInitialized) {
+//     console.log("選課按鈕已經初始化過，跳過執行。");
+//     return;
+//   }
+
+//   console.log(`Logged in as ${chatBotClient.user.tag}`);
+
+//   const channel = chatBotClient.channels.cache.get(config.signUpChannelId);
+//   if (!channel) {
+//     console.log("找不到 #sign-up 頻道，請檢查頻道 ID 是否正確。");
+//     return;
+//   }
+
+//   try {
+//     const btn_signup = signupCourseButton();
+//     const sentMessage = await channel.send({
+//       content: "🎓 歡迎來到課程選擇～請點擊以下按鈕來註冊你感興趣的課程！",
+//       components: [btn_signup]
+//     });
+//     await sentMessage.pin();
+//     console.log("成功在 #sign-up 頻道釘選選課訊息。");
+
+//     // 更新狀態
+//     saveState({ hasInitialized: true });
+//   } catch (error) {
+//     console.error("無法發送或釘選訊息:", error);
+//   }
+// });
 
 // Login Discord
 chatBotClient.login(process.env.TOKEN);

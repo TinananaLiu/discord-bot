@@ -31,7 +31,7 @@ export const buildTeacherRow = (teacherOptions) => {
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId("ddl_teacher")
-      .setPlaceholder("Select a teacher to see available times")
+      .setPlaceholder("請選擇老師")
       .addOptions(teacherOptions)
   );
 };
@@ -51,7 +51,7 @@ export const buildReserveTimeRow = (reserveTimeOptions) => {
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId("ddl_reserve")
-      .setPlaceholder("Select an available time slot you want to reserve")
+      .setPlaceholder("請選擇時段")
       .addOptions(reserveTimeOptions)
   );
 };

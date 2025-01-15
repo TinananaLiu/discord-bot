@@ -14,7 +14,7 @@ export const getTimeForm = async (interaction, timeSelectionsMap) => {
     return;
   }
 
-  if (!interaction.member.roles.cache.some(role => role.name === "Tutors")){
+  if (!interaction.member.roles.cache.some((role) => role.name === "Tutors")) {
     await interaction.reply({
       content: `You are not a tutor!!`,
       ephemeral: true
@@ -40,7 +40,7 @@ export const getTimeForm = async (interaction, timeSelectionsMap) => {
   const endTimeRow = buildEndTimeRow();
 
   await interaction.reply({
-    content: `Date: ${formattedDate} \nSelect from below options to create available time slot.\n`,
+    content: `日期: ${formattedDate} \n請從以下選項中選擇開始和結束的時間，來新增可預約時段。\n`,
     components: [startTimeRow, endTimeRow, btn_timeslot],
     ephemeral: true
   });
@@ -96,7 +96,7 @@ export const submitTimeForm = async (interaction, timeSelectionsMap) => {
   // Dummy check
   if (!timeSelection || !timeSelection.startTime || !timeSelection.endTime) {
     return await interaction.reply({
-      content: "Please select both a start and end time.",
+      content: "請確保同時選擇開始時間和結束時間。",
       ephemeral: true
     });
   }
@@ -112,18 +112,17 @@ export const submitTimeForm = async (interaction, timeSelectionsMap) => {
     // 發送可用時間到資料庫
     const response = await postAvailableTime(data, interaction.user.id);
 
-    if (response.status === 400){
+    if (response.status === 400) {
       await interaction.update({
-        content: `Detected duplicated available time slot. \nPlease use command "/search-available-time" to check your existing time slot`,
+        content: `檢查到重複的時段。\n請使用指令 /search-available-time 查詢您已新增過的時段。`,
         components: [],
         ephemeral: true
       });
-    }
-    else{
+    } else {
       // 格式化日期並在 Discord 頻道回應
       const formattedDate = DateUtil.formatDate(date);
       await interaction.update({
-        content: `Available time slots are created successfully: \n\nTeacher:<@${interaction.user.id}> \nDate: ${formattedDate} \nFrom: ${startTime} \nTo: ${endTime}`,
+        content: `可預約時段新增成功：\n\n老師：<@${interaction.user.id}> \n日期：${formattedDate} \n時間：${startTime} 至 ${endTime}`,
         components: [],
         ephemeral: true
       });
@@ -136,8 +135,7 @@ export const submitTimeForm = async (interaction, timeSelectionsMap) => {
 
     // 若發生錯誤，回應錯誤訊息給用戶
     await interaction.update({
-      content:
-        "An error occurred while creating available time slots. Please try again later.",
+      content: "新增時段時發生錯誤。請稍後再試。",
       components: [],
       ephemeral: true
     });

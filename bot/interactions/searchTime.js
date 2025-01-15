@@ -16,7 +16,7 @@ export const getSearchForm = async (interaction) => {
 
   if (!teacherRole) {
     return interaction.reply({
-      content: 'No "Teachers" role found in the server.',
+      content: 'No "Tutors" role found in the server.',
       ephemeral: true
     });
   }
@@ -29,7 +29,7 @@ export const getSearchForm = async (interaction) => {
 
   if (teachers.size === 0) {
     return interaction.reply({
-      content: 'No teachers found with the "Teachers" role.',
+      content: 'No tutors found with the "Tutors" role.',
       ephemeral: true
     });
   }
@@ -42,7 +42,7 @@ export const getSearchForm = async (interaction) => {
   const row = buildTeacherRow(teacherOptions);
 
   await interaction.reply({
-    content: "Please select a teacher to view available times:",
+    content: "請選擇你想查看時段的老師：",
     components: [row],
     ephemeral: true
   });
@@ -54,12 +54,12 @@ export const submitSearchForm = async (interaction) => {
   // Dummy check
   if (!selectedTeacherId) {
     return await interaction.reply({
-      content: "Please select a teacher.",
+      content: "請選擇一位老師。",
       ephemeral: true
     });
   }
 
-  await interaction.deferReply();
+  await interaction.deferReply({ ephemeral: true });
 
   try {
     // API calling
@@ -70,19 +70,13 @@ export const submitSearchForm = async (interaction) => {
     if (availableTimes.length > 0) {
       const msg = DateUtil.getRetrieveResultMessage(availableTimes);
 
-      await interaction.followUp(
-        `The available times for the selected teacher are:\n ${msg}`
-      );
+      await interaction.followUp(`這位老師目前可預約的時段如下：\n ${msg}`);
     } else {
-      await interaction.followUp(
-        "The selected teacher has no available times."
-      );
+      await interaction.followUp("你所選擇的老師目前沒有可預約的時段。");
     }
   } catch (error) {
     console.error(error);
-    await interaction.followUp(
-      "Sorry, something went wrong while fetching the available times."
-    );
+    await interaction.followUp("查詢老師時段發生一些錯誤，請稍後再試。");
   }
 };
 
@@ -103,7 +97,7 @@ export const getReserveForm = async (interaction) => {
 
   if (!availableTimes || availableTimes.length === 0) {
     return await interaction.reply({
-      content: `Date: ${formattedDate} \nNo available time slots for this date.`,
+      content: `日期：${formattedDate} \n該日期沒有可以預約的時段，請選擇別的日期。`,
       ephemeral: true
     });
   }
@@ -116,7 +110,7 @@ export const getReserveForm = async (interaction) => {
   const reserveTimeRow = buildReserveTimeRow(reserveTimeOptions);
 
   await interaction.reply({
-    content: `Date: ${formattedDate} \nSelect from below options to reserve an available time slot.\n`,
+    content: `日期：${formattedDate} \n請選擇以下你想預約的任一時段。\n`,
     components: [reserveTimeRow],
     ephemeral: true
   });
@@ -128,7 +122,7 @@ export const submitReserveForm = async (interaction) => {
   // Dummy check
   if (!selectedTimeSlotId) {
     return await interaction.reply({
-      content: "Please select a time slot.",
+      content: "請選擇一個時段。",
       ephemeral: true
     });
   }
@@ -141,18 +135,16 @@ export const submitReserveForm = async (interaction) => {
     await postReserveTime(data, interaction.user.id);
 
     // Reply in DC channel
-    //const formattedDate = formatDate(date);
+    // 這邊我想改成抓到那個選項的label並顯示在content
     await interaction.update({
-      // content: `Available time slot is reserved successfully: \n\nDate: ${formattedDate} \nTime: ${}`,
-      content: "Available time slot is reserved successfully",
+      content: "該時段已預約成功！請記得你與老師的預約。",
       components: [],
       ephemeral: true
     });
   } catch (error) {
     console.error(error);
     await interaction.reply({
-      content:
-        "Sorry, something went wrong while reserving the available time slot.",
+      content: "預約時段發生一些錯誤，請稍後再試。",
       components: [],
       ephemeral: true
     });

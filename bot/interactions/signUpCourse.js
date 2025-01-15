@@ -29,8 +29,8 @@ export const signUpCourseForm = async (interaction, userSelections) => {
     const courseOptions = interaction.guild.channels.cache
       .filter(
         (channel) =>
-          channel.parentId === courseCategory.id && channel.type === 0
-      ) // channel.type === 0 表示 text channel
+          channel.parentId === courseCategory.id && channel.type === 0 // channel.type === 0 表示 text channel
+      )
       .map((channel) => ({
         label: channel.name,
         value: channel.id
@@ -40,7 +40,7 @@ export const signUpCourseForm = async (interaction, userSelections) => {
     const btn_course = submitCourseButton();
 
     const message = await interaction.reply({
-      content: `Select from below options to sign up the course you are interested in.\n`,
+      content: `請從以下選項中選擇您感興趣的課程進行註冊。\n`,
       components: [signUpRow, btn_course],
       ephemeral: true,
       fetchReply: true
@@ -77,7 +77,7 @@ export const submitCourseForm = async (interaction, userSelections) => {
 
   if (!selectedCourses || selectedCourses.length === 0) {
     return await interaction.reply({
-      content: "Please select at least one course.",
+      content: "請選擇至少一種課程。",
       ephemeral: true
     });
   }
@@ -109,7 +109,7 @@ export const submitCourseForm = async (interaction, userSelections) => {
     }
 
     await interaction.reply({
-      content: "已成功為你分配選擇的課程身份組！",
+      content: "已成功為你分配選擇的課程身份組！現在可以查看該課程頻道內容了。",
       ephemeral: true
     });
 

@@ -9,6 +9,7 @@ const config = {
   startHereChannelId: "1297136179124240404",
   onboardRoleId: "1297186072635117639",
   signUpChannelId: "1301435298957361202",
+  courseListChannelId: "1308697710613762079",
   guildId: process.env.GUILD_ID
 };
 
