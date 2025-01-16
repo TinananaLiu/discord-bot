@@ -1,11 +1,12 @@
 import {
   buildTeacherRow,
-  buildReserveTimeRow
+  buildReserveTimeRow,
 } from "./components/dropDownList.js";
 import {
   getAvailableTime,
   getAvailableTimeByDate,
-  postReserveTime
+  postReserveTime,
+  getTimeSchedule,
 } from "../api/api.js";
 import DateUtil from "../utils/dateUtil.js";
 
@@ -17,7 +18,7 @@ export const getSearchForm = async (interaction) => {
   if (!teacherRole) {
     return interaction.reply({
       content: 'No "Tutors" role found in the server.',
-      ephemeral: true
+      ephemeral: true,
     });
   }
 
@@ -30,13 +31,13 @@ export const getSearchForm = async (interaction) => {
   if (teachers.size === 0) {
     return interaction.reply({
       content: 'No tutors found with the "Tutors" role.',
-      ephemeral: true
+      ephemeral: true,
     });
   }
 
   const teacherOptions = teachers.map((teacher) => ({
     label: teacher.user.username,
-    value: teacher.user.id
+    value: teacher.user.id,
   }));
 
   const row = buildTeacherRow(teacherOptions);
@@ -44,7 +45,7 @@ export const getSearchForm = async (interaction) => {
   await interaction.reply({
     content: "請選擇你想查看時段的老師：",
     components: [row],
-    ephemeral: true
+    ephemeral: true,
   });
 };
 
@@ -55,7 +56,7 @@ export const submitSearchForm = async (interaction) => {
   if (!selectedTeacherId) {
     return await interaction.reply({
       content: "請選擇一位老師。",
-      ephemeral: true
+      ephemeral: true,
     });
   }
 
@@ -98,13 +99,13 @@ export const getReserveForm = async (interaction) => {
   if (!availableTimes || availableTimes.length === 0) {
     return await interaction.reply({
       content: `日期：${formattedDate} \n該日期沒有可以預約的時段，請選擇別的日期。`,
-      ephemeral: true
+      ephemeral: true,
     });
   }
 
   const reserveTimeOptions = availableTimes.map((slot) => ({
     label: `${slot.start_time} - ${slot.end_time}`,
-    value: slot.id
+    value: slot.id,
   }));
 
   const reserveTimeRow = buildReserveTimeRow(reserveTimeOptions);
@@ -112,7 +113,7 @@ export const getReserveForm = async (interaction) => {
   await interaction.reply({
     content: `日期：${formattedDate} \n請選擇以下你想預約的任一時段。\n`,
     components: [reserveTimeRow],
-    ephemeral: true
+    ephemeral: true,
   });
 };
 
@@ -123,14 +124,14 @@ export const submitReserveForm = async (interaction) => {
   if (!selectedTimeSlotId) {
     return await interaction.reply({
       content: "請選擇一個時段。",
-      ephemeral: true
+      ephemeral: true,
     });
   }
 
   try {
     // API calling
     const data = {
-      timeSlotId: selectedTimeSlotId
+      timeSlotId: selectedTimeSlotId,
     };
     await postReserveTime(data, interaction.user.id);
 
@@ -139,14 +140,40 @@ export const submitReserveForm = async (interaction) => {
     await interaction.update({
       content: "該時段已預約成功！請記得你與老師的預約。",
       components: [],
-      ephemeral: true
+      ephemeral: true,
     });
   } catch (error) {
     console.error(error);
     await interaction.reply({
       content: "預約時段發生一些錯誤，請稍後再試。",
       components: [],
-      ephemeral: true
+      ephemeral: true,
     });
+  }
+};
+
+export const getTimeByUser = async (interaction) => {
+  const userId = interaction.guild.members.cache.get(interaction.user.id);
+  if (!userId) {
+    return await interaction.reply({
+      content: "發生了預期以外的錯誤，請稍後再重新查詢。",
+      ephemeral: true,
+    });
+  }
+
+  try {
+    const data = await getTimeSchedule(userId);
+    const timeSchedule = data.timeSchedule;
+    if (timeSchedule.length > 0) {
+      const msg = DateUtil.getRetrieveResultMessage(timeSchedule);
+      await interaction.followUp(`你與老師預約的時段如下：\n ${msg}`);
+    } else {
+      await interaction.followUp(
+        "你目前沒有預約任何的時段。請使用 /reserve-available-time 指令進行預約！"
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    await interaction.followUp("查詢你預約的時段發生一些錯誤，請稍後再試。");
   }
 };
