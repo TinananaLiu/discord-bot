@@ -48,10 +48,16 @@ async function postUserInfo(data, userId) {
   return response;
 }
 
+async function getTimeSchedule(userId) {
+  const response = await apiClient.get(`/available_time/user/${userId}`);
+  return response.data;
+}
+
 export {
   postAvailableTime,
   getAvailableTime,
   getAvailableTimeByDate,
   postReserveTime,
-  postUserInfo
+  postUserInfo,
+  getTimeSchedule,
 };

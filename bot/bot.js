@@ -2,27 +2,28 @@ import { Client, GatewayIntentBits, Events, Partials } from "discord.js";
 import {
   getWelcomeMessage,
   getUserInfoModal,
-  submitUserInfoModal
+  submitUserInfoModal,
 } from "./interactions/userOnboard.js";
 import {
   signUpCourseForm,
-  submitCourseForm
+  submitCourseForm,
 } from "./interactions/signupCourse.js";
 import {
   getTimeForm,
   updateTimeCache,
-  submitTimeForm
+  submitTimeForm,
 } from "./interactions/addTime.js";
 import {
   getSearchForm,
   submitSearchForm,
   getReserveForm,
-  submitReserveForm
+  submitReserveForm,
+  getTimeByUser,
 } from "./interactions/searchTime.js";
 
 import {
   signupCourseButton,
-  userInfoButton
+  userInfoButton,
 } from "./interactions/components/button.js";
 import { loadState, saveState } from "./utils/stateManage.js";
 
@@ -37,9 +38,9 @@ const chatBotClient = new Client({
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMessageReactions
+    GatewayIntentBits.GuildMessageReactions,
   ],
-  partials: [Partials.Message, Partials.Reaction, Partials.Channel]
+  partials: [Partials.Message, Partials.Reaction, Partials.Channel],
 });
 
 /**
@@ -70,13 +71,14 @@ const customIdHandlers = {
   ddl_endTime: argsWrapper(updateTimeCache, timeSelectionsMap),
   btn_timeslot: argsWrapper(submitTimeForm, timeSelectionsMap),
   ddl_teacher: submitSearchForm,
-  ddl_reserve: submitReserveForm
+  ddl_reserve: submitReserveForm,
 };
 
 const commandNameHandlers = {
   "add-available-time": argsWrapper(getTimeForm, timeSelectionsMap),
   "search-available-time": getSearchForm,
-  "reserve-available-time": getReserveForm
+  "reserve-available-time": getReserveForm,
+  "query-time-schedule": getTimeByUser,
 };
 
 /**
@@ -144,7 +146,7 @@ chatBotClient.once(Events.ClientReady, async () => {
         const btn_userinfo = userInfoButton();
         const sentMessage = await startHereChannel.send({
           content: `🎉 歡迎新加入的成員！請確保你已在 #${rulesChannel.name} 頻道按過 ✅，然後點擊下方按鈕來完成表單`,
-          components: [btn_userinfo]
+          components: [btn_userinfo],
         });
         await sentMessage.pin();
         console.log("userInfoButton pinned successfully at #start-here.");
@@ -171,7 +173,7 @@ chatBotClient.once(Events.ClientReady, async () => {
         const btn_signup = signupCourseButton();
         const sentMessage = await signUpChannel.send({
           content: "🎓 歡迎來到課程選擇～請點擊以下按鈕來註冊你感興趣的課程！",
-          components: [btn_signup]
+          components: [btn_signup],
         });
         await sentMessage.pin();
         console.log("signupCourseButton pinned successfully at #sign-up.");
@@ -193,39 +195,6 @@ chatBotClient.on(Events.GuildMemberAdd, async (member) => {
 chatBotClient.on(Events.InteractionCreate, async (interaction) => {
   await handleInteraction(interaction);
 });
-
-// //只執行一次：選課按鈕並釘選
-// chatBotClient.once("ready", async () => {
-//   // 載入狀態
-//   const hasInitialized = loadState();
-//   if (hasInitialized) {
-//     console.log("選課按鈕已經初始化過，跳過執行。");
-//     return;
-//   }
-
-//   console.log(`Logged in as ${chatBotClient.user.tag}`);
-
-//   const channel = chatBotClient.channels.cache.get(config.signUpChannelId);
-//   if (!channel) {
-//     console.log("找不到 #sign-up 頻道，請檢查頻道 ID 是否正確。");
-//     return;
-//   }
-
-//   try {
-//     const btn_signup = signupCourseButton();
-//     const sentMessage = await channel.send({
-//       content: "🎓 歡迎來到課程選擇～請點擊以下按鈕來註冊你感興趣的課程！",
-//       components: [btn_signup]
-//     });
-//     await sentMessage.pin();
-//     console.log("成功在 #sign-up 頻道釘選選課訊息。");
-
-//     // 更新狀態
-//     saveState({ hasInitialized: true });
-//   } catch (error) {
-//     console.error("無法發送或釘選訊息:", error);
-//   }
-// });
 
 // Login Discord
 chatBotClient.login(process.env.TOKEN);

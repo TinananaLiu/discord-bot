@@ -19,7 +19,7 @@ const commands = [
   },
   {
     name: "search-available-time",
-    description: "Search teacher's available time"
+    description: "Search tutor's available time",
   },
   {
     name: "reserve-available-time",
@@ -30,10 +30,14 @@ const commands = [
         description:
           "Please specify the date you want to search, enter in yyyyMMdd format (e.g. 20240214)",
         type: 4,
-        required: true
-      }
-    ]
-  }
+        required: true,
+      },
+    ],
+  },
+  {
+    name: "query-time-schedule",
+    description: "Query your schedule with the tutor",
+  },
 ];
 
 const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
