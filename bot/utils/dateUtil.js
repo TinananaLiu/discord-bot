@@ -40,7 +40,7 @@ class DateUtil {
       const formatedDate = this.formatDate(new Date(slot.date));
       if (!memo.has(formatedDate)) {
         memo.add(formatedDate);
-        output += `\n ${formatedDate}: \n`;
+        output += `\n **🗓️ ${formatedDate}:** \n`;
       }
       output += ` - ${slot.start_time} - ${slot.end_time} \n`;
     });

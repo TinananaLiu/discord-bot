@@ -77,11 +77,11 @@ class ReservationModel extends BaseModel {
           at.start_time,
           at.end_time
         FROM 
-          reservation r
+          "${this.schemaName}".reservation r
         INNER JOIN 
-          available_time at
+          "${this.schemaName}".available_time at
         ON 
-          r.available_time_slot_id = at.id
+          r.time_slot_id = at.id
         WHERE 
           r.student_id = $1
         ORDER BY 

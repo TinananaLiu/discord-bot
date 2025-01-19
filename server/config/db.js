@@ -8,7 +8,15 @@ const db = pgp({
   database: config.db.database,
   user: config.db.user,
   password: config.db.password,
-  ssl: true
+  ssl: false
 });
+
+try {
+  const result = await db.one("SELECT NOW() as current_time");
+  console.log("✅ Database connected successfully!");
+  console.log("Server time:", result.current_time);
+} catch (error) {
+  console.error("❌ Failed to connect to the database:", error.message);
+}
 
 export default db;

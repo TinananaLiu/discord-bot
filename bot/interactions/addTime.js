@@ -122,7 +122,7 @@ export const submitTimeForm = async (interaction, timeSelectionsMap) => {
       // 格式化日期並在 Discord 頻道回應
       const formattedDate = DateUtil.formatDate(date);
       await interaction.update({
-        content: `可預約時段新增成功：\n\n老師：<@${interaction.user.id}> \n日期：${formattedDate} \n時間：${startTime} 至 ${endTime}`,
+        content: `**【可預約時段新增成功 ✅】**\n  🧑‍🏫 老師：<@${interaction.user.id}> \n  📅 日期：${formattedDate} \n  ⏰ 時間：${startTime} 至 ${endTime}`,
         components: [],
         ephemeral: true
       });
