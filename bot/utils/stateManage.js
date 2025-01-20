@@ -7,7 +7,6 @@ export const loadState = () => {
     const state = JSON.parse(fs.readFileSync(stateFile, "utf-8"));
     return state;
   }
-  // 預設狀態
   return { hasInitialized: {} };
 };
 

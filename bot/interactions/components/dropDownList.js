@@ -5,7 +5,7 @@ const times = Array.from({ length: 10 }, (_, i) => {
   const hour = String(i + 9).padStart(2, "0"); // Ensure hour is two digits
   return {
     label: `${hour}:00`,
-    value: `${hour}:00`
+    value: `${hour}:00`,
   };
 });
 
@@ -41,9 +41,9 @@ export const signUpCourseRow = (courseOptions) => {
     new StringSelectMenuBuilder()
       .setCustomId("ddl_course")
       .setPlaceholder("請選擇課程")
-      .setMinValues(1) // 最少選擇一個
-      .setMaxValues(courseOptions.length) // 最多可選擇的課程數量
-      .addOptions(courseOptions) // 添加選項
+      .setMinValues(1)
+      .setMaxValues(courseOptions.length)
+      .addOptions(courseOptions)
   );
 };
 

@@ -7,7 +7,7 @@ import {
 import {
   signUpCourseForm,
   submitCourseForm,
-} from "./interactions/signupCourse.js";
+} from "./interactions/signUpCourse.js";
 import {
   getTimeForm,
   updateTimeCache,

@@ -7,7 +7,7 @@ export const getWelcomeMessage = async (member) => {
   if (rulesChannel) {
     await rulesChannel.send({
       content: `👋 歡迎 ${member.displayName} 加入！請閱讀伺服器規則並點擊該訊息的 ✅ 表情來表示同意規則。`,
-      ephemeral: true
+      ephemeral: true,
     });
   }
 };
@@ -22,20 +22,18 @@ export const getUserInfoModal = async (interaction, chatBotClient) => {
   if (!member) {
     return await interaction.reply({
       content: "發生了預期以外的錯誤，請稍後再重新填寫。",
-      ephemeral: true
+      ephemeral: true,
     });
   }
 
-  // 檢查用戶是否已經有 onboardRoleId
   if (member.roles.cache.has(config.onboardRoleId)) {
     return await interaction.reply({
       content: "您已經完成了身份註冊，無需再次填寫表單。",
-      ephemeral: true
+      ephemeral: true,
     });
   }
 
   try {
-    // 從指定頻道中抓取訊息
     const rulesChannel = chatBotClient.channels.cache.get(
       config.rulesChannelId
     );
@@ -43,17 +41,15 @@ export const getUserInfoModal = async (interaction, chatBotClient) => {
       config.rulesMessageId
     );
 
-    // 使用 fetch() 確保反應緩存是最新的
     const reaction = await rulesMessage.reactions.cache.get("✅")?.fetch();
 
-    // 從 API 獲取最新的用戶反應數據
     const usersReacted = await reaction.users.fetch();
     const hasReacted = usersReacted.has(interaction.user.id);
 
     if (!hasReacted) {
       return await interaction.reply({
         content: `請先在 #${rulesChannel.name} 頻道按 ✅ 表情，同意規範後再填寫表單。`,
-        ephemeral: true
+        ephemeral: true,
       });
     }
 
@@ -63,7 +59,7 @@ export const getUserInfoModal = async (interaction, chatBotClient) => {
     console.error("Failed to fetch the rules message:", error);
     await interaction.reply({
       content: "無法找到規則訊息，請聯繫管理員。",
-      ephemeral: true
+      ephemeral: true,
     });
   }
 };
@@ -84,7 +80,7 @@ export const submitUserInfoModal = async (interaction, chatBotClient) => {
   const data = {
     studentName: name,
     age: age,
-    interests: interests
+    interests: interests,
   };
 
   const signUpChannel = chatBotClient.channels.cache.get(
@@ -92,7 +88,6 @@ export const submitUserInfoModal = async (interaction, chatBotClient) => {
   );
 
   try {
-    // 發送資料到後端
     await postUserInfo(data, userId);
 
     const member = interaction.guild.members.cache.get(userId);
@@ -100,19 +95,19 @@ export const submitUserInfoModal = async (interaction, chatBotClient) => {
       await member.roles.add(config.onboardRoleId);
       await interaction.reply({
         content: `${member.displayName}，你已成功加入社群，請在 #${signUpChannel.name} 頻道進行選課！`,
-        ephemeral: true
+        ephemeral: true,
       });
     } else {
       await interaction.reply({
         content: "找不到你的資料，請稍後再試。",
-        ephemeral: true
+        ephemeral: true,
       });
     }
   } catch (error) {
     console.error("Error during interaction handling:", error);
     await interaction.reply({
       content: "無法儲存你的資料，請聯繫管理員。",
-      ephemeral: true
+      ephemeral: true,
     });
   }
 };

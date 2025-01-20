@@ -1,7 +1,7 @@
 import { buildTimeSlotButton } from "./components/button.js";
 import {
   buildStartTimeRow,
-  buildEndTimeRow
+  buildEndTimeRow,
 } from "./components/dropDownList.js";
 import { postAvailableTime } from "../api/api.js";
 import DateUtil from "../utils/dateUtil.js";
@@ -17,7 +17,7 @@ export const getTimeForm = async (interaction, timeSelectionsMap) => {
   if (!interaction.member.roles.cache.some((role) => role.name === "Tutors")) {
     await interaction.reply({
       content: `You are not a tutor!!`,
-      ephemeral: true
+      ephemeral: true,
     });
     return;
   }
@@ -31,7 +31,7 @@ export const getTimeForm = async (interaction, timeSelectionsMap) => {
     timeSelectionsMap.set(interaction.user.id, {
       date: parsedDate,
       startTime: null,
-      endTime: null
+      endTime: null,
     });
   }
 
@@ -42,7 +42,7 @@ export const getTimeForm = async (interaction, timeSelectionsMap) => {
   await interaction.reply({
     content: `日期: ${formattedDate} \n請從以下選項中選擇開始和結束的時間，來新增可預約時段。\n`,
     components: [startTimeRow, endTimeRow, btn_timeslot],
-    ephemeral: true
+    ephemeral: true,
   });
 };
 
@@ -64,11 +64,10 @@ export const updateTimeCache = async (interaction, timeSelectionsMap) => {
   const label =
     interaction.customId === "ddl_startTime" ? "Start Time" : "End Time";
 
-  // If user didn't add
   if (!timeSelectionsMap.has(interaction.user.id)) {
     await interaction.reply({
       content: `Something went wrong... please try again...`,
-      ephemeral: true
+      ephemeral: true,
     });
   }
 
@@ -97,7 +96,7 @@ export const submitTimeForm = async (interaction, timeSelectionsMap) => {
   if (!timeSelection || !timeSelection.startTime || !timeSelection.endTime) {
     return await interaction.reply({
       content: "請確保同時選擇開始時間和結束時間。",
-      ephemeral: true
+      ephemeral: true,
     });
   }
 
@@ -106,38 +105,34 @@ export const submitTimeForm = async (interaction, timeSelectionsMap) => {
     const data = {
       date: date,
       startTime: startTime,
-      endTime: endTime
+      endTime: endTime,
     };
 
-    // 發送可用時間到資料庫
     const response = await postAvailableTime(data, interaction.user.id);
 
     if (response.status === 400) {
       await interaction.update({
         content: `檢查到重複的時段。\n請使用指令 /search-available-time 查詢您已新增過的時段。`,
         components: [],
-        ephemeral: true
+        ephemeral: true,
       });
     } else {
-      // 格式化日期並在 Discord 頻道回應
       const formattedDate = DateUtil.formatDate(date);
       await interaction.update({
         content: `**【可預約時段新增成功 ✅】**\n  🧑‍🏫 老師：<@${interaction.user.id}> \n  📅 日期：${formattedDate} \n  ⏰ 時間：${startTime} 至 ${endTime}`,
         components: [],
-        ephemeral: true
+        ephemeral: true,
       });
     }
 
-    // 刪除記憶體中的記錄
     timeSelectionsMap.delete(interaction.user.id);
   } catch (error) {
     console.error("發生錯誤:", error);
 
-    // 若發生錯誤，回應錯誤訊息給用戶
     await interaction.update({
       content: "新增時段時發生錯誤。請稍後再試。",
       components: [],
-      ephemeral: true
+      ephemeral: true,
     });
   }
 };
